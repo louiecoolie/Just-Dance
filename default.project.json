@@ -1,0 +1,45 @@
+{
+  "name": "Just Dance",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Systems": {
+        "$path": "src/Global/Systems"
+      },
+      "Events": {
+        "$path": "src/Global/Events"
+      },
+      "Vendor": {
+        "$path": "src/Global/Vendor"
+      }
+    },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "Modules": {
+        "$path": "src/ServerResources/Modules"
+      },
+      "Services": {
+        "$path": "src/ServerResources/Services"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Server": {
+        "$path": "src/Server"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Network": {
+          "$path": "src/Client/Network"
+        },
+        "Modules": {
+          "$path": "src/Client/Modules"
+        }
+      }
+    }
+  }
+}
