@@ -1,5 +1,0 @@
-return {
-    A = function()
-
-    end;
-}

@@ -1,19 +1,25 @@
 
+-- service is responsible for networking and processing market place requests.
+
 local RunService = game:GetService("RunService")
-
-
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local MarketplaceService = game:GetService("MarketplaceService")
+local Players = game:GetService("Players")
 
-local luaClassModule = ReplicatedStorage.Common.Modules:WaitForChild("LuaClass")
-local luaClass = require(luaClassModule)
+-- modules
+local util = ReplicatedStorage.Vendor
 
-local BaseSingleton = require(luaClassModule:WaitForChild("BaseSingleton"))
+--modules 
+local rodux = require(util:WaitForChild("Rodux"))
+local roactRodux = require(util:WaitForChild("Roact-Rodux"))
+local roact = require(util:WaitForChild("Roact"))
+local class = require(util.LuaClass)
+local baseSingleton = require(util.LuaClass:WaitForChild("BaseSingleton"))
 
-local MarketService, get, set = luaClass("MarketService", BaseSingleton)
+local MarketService, get, set = class("MarketService", baseSingleton)
 
 function MarketService.__initSingleton(prototype)
-    local self = BaseSingleton.__initSingleton(MarketService) -- get singleton by calling super init
+    local self = baseSingleton.__initSingleton(MarketService) -- get singleton by calling super init
 
     self._developerProducts = {} -- create a dictionary for developer products
     self._productStores = {} -- create a dictionary for different product stores
