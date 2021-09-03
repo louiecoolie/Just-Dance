@@ -10,4 +10,5 @@ local ChartService = require(ReplicatedStorage.Services.ChartService)()
 
 
 ChartService:LoadApp(game.Players.LocalPlayer.PlayerGui)
+UIService:LoadApp(game.Players.LocalPlayer.PlayerGui)
  

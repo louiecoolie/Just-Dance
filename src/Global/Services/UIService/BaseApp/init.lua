@@ -1,21 +1,24 @@
--- base app that will be wrapped by context and hold the entire library of components which should be bound to update through roact-rodux 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local GuiService = game:GetService("GuiService")
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local rs = game:GetService("RunService")
+local GuiService = game:GetService("GuiService")
 
 
 --modules
 local util = ReplicatedStorage.Vendor
 local roactRodux = require(util:WaitForChild("Roact-Rodux"))
 local roact = require(util:WaitForChild("Roact"))
+--animation modules
+local flipper = require(util:WaitForChild("Flipper"))
+local spring = flipper.Spring
 
 --components
 local components = script.Components
 local context = require(components:FindFirstChild("Context"))
-local shop = require(components:FindFirstChild("Shop"))
+local hud = require(components:FindFirstChild("Hud"))
 
 
-local BaseApp = roact.Component:extend("BaseApp")
+local BaseApp = roact.Component:extend("UIApp")
 
 -- rodux methods
 
@@ -45,8 +48,8 @@ end
 
 function BaseApp:render()
 
-    local gameShop = context.with(function(theme)
-        return roact.createElement(gameShop, {
+    local gameHud = context.with(function(theme)
+        return roact.createElement(hud, {
             theme = theme;
         })
     
@@ -56,13 +59,13 @@ function BaseApp:render()
         value = self.props.themeType;
     },{
     
-        BaseApp = roact.createElement("ScreenGui", {
+        UIApp = roact.createElement("ScreenGui", {
             IgnoreGuiInset = true;
             ResetOnSpawn = true;
             DisplayOrder = 10;
         }, { -- children
 
-            Shop = gameShop;
+            Hud = gameHud;
 
         })
     })

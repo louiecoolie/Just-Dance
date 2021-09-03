@@ -7,18 +7,11 @@ local RunService = game:GetService("RunService")
 
 -- modules
 local util = ReplicatedStorage.Vendor
-
---modules 
 local rodux = require(util:WaitForChild("Rodux"))
 local roactRodux = require(util:WaitForChild("Roact-Rodux"))
 local roact = require(util:WaitForChild("Roact"))
 local class = require(util.LuaClass)
 local baseSingleton = require(util.LuaClass:WaitForChild("BaseSingleton"))
-
-
--- lobby services
-
-
 
 --class declaration
 local ChartService, get, set = class("ChartService", baseSingleton)
@@ -37,10 +30,11 @@ function ChartService.__initSingleton(prototype) -- class initilaization
 
         self._syncClient = Instance.new("RemoteEvent", script)
         self._startClient = Instance.new("RemoteEvent", script)
+     
+        
         self._syncClient.Name = "syncClient"
         self._startClient.Name = "startClient"
-        
-
+    
         self._playerStores = {}
         self._serverStore = rodux.Store.new(server, {}, {rodux.thunkMiddleware})
 
@@ -88,7 +82,7 @@ function ChartService.__initSingleton(prototype) -- class initilaization
                     self._currentSound = Instance.new("Sound") -- this will play the current song and be cleaned up on the next song.
                     self._currentSound.Parent = game:GetService("SoundService")
             
-                    print("starting song")
+                   
 
                     self._currentIndex = self._charts[math.random(1,#self._charts)] -- get a random chart
             
@@ -102,8 +96,10 @@ function ChartService.__initSingleton(prototype) -- class initilaization
                     self._stepNote = true
 
                     self._startClient:FireAllClients(true, self._currentIndex)
+                   
                     self._currentSound.Ended:Connect(function()
-                    
+                        print('end')
+                        ReplicatedStorage.Events.Binding:Fire("reset")
                         self._startClient:FireAllClients(false)
                     end)
                 end
@@ -126,7 +122,7 @@ function ChartService.__initSingleton(prototype) -- class initilaization
                     
                                     self._chartTick += 1;
                                     if self._currentIndex.chart[self._chartTick] then
-                                     --   print("found note at", self._chartTick)
+                      
                                         self._songElapsed = tick()
                                     end
                                     
@@ -158,8 +154,10 @@ function ChartService.__initSingleton(prototype) -- class initilaization
             App = roact.createElement(require(script.BaseApp),{
             })
         })
+        --obtaining remotes
         self._syncClient = script.syncClient
         self._startClient = script.startClient
+        self._update = ReplicatedStorage.Services.UIService.updateServer -- get the remote from uiservice so we can update the uiservice store
         -- chart container
         self._charts = {} -- define an empty table for charts 
         for _, chartData in pairs(script.Charts:GetChildren()) do -- get the charts
@@ -176,7 +174,8 @@ function ChartService.__initSingleton(prototype) -- class initilaization
   
     
         -- game logic variables
-        self._intermission = 2
+        self._activate = false
+        self._intermission = 4
         self._elapsed = 0;
         self._songTick = nil;
         self._songElapsed = 0;
@@ -186,46 +185,69 @@ function ChartService.__initSingleton(prototype) -- class initilaization
         self._syncClient.OnClientEvent:Connect(function(songTick, chartTick)
         
             self._songTick = songTick
+            
             self._chartTick = chartTick
 
         end)
 
         self._startClient.OnClientEvent:Connect(function(condition, index)
-            print("received start from server")
+
             self._songPlaying = condition
             self._stepNote = condition
             self._songElapsed = tick()
+            self._currentSound = game:GetService("SoundService"):WaitForChild("Sound", 5) -- time out in 5 second but it should definetly find a sound object.
 
             if index then
-         
+                
                 self._currentIndex = index;
+            
+            end
+
+            if condition == false then
+                self._songTick = nil
+                self._chartTick = 1;
             end
         
         end)
         
-        self._coreLoop = RunService.Heartbeat:Connect(function(dt) -- core logic loop for the chart service initialized here for client
+        self._coreLoop = RunService.RenderStepped:Connect(function(dt) -- core logic loop for the chart service initialized here for client
 
-            if self._songPlaying then
-                if self._stepNote then
-                
-                    if self._songTick then
-                  
+            if self._currentSound then
+                if self._currentSound.isLoaded then -- make sure the audio is loaded to get pretty TimeLength
+            
+                    if self._stepNote then
+                        
+                        self._songTick = self._currentSound.TimeLength / self._currentIndex.length 
                         self._stepNote = false
                         self._lastStep = dt
-                       -- print(self._songTick)
+                        
+                        
                         coroutine.wrap(function()
                             while self._lastStep > self._songTick do
                                 self._lastStep -= self._songTick
-                                --print(self._lastStep)
-                                                            
+                                                    
                                 
                                 if (tick()-self._songElapsed) >= self._songTick then
-                                  
+                    
                                     self._chartTick += 1;
-                                    --print(self._chartTick)
-                                    --print(self._currentIndex.chart[self._chartTick])
                                     if self._currentIndex.chart[tostring(self._chartTick)] then
-                                        print("found note at client", self._chartTick)
+                              
+                                        local handle
+
+                                        local function unmount()
+                                          roact.unmount(handle)
+                                        end
+                                        
+                                        if self._activate then
+                                            handle = roact.mount(roact.createElement(roactRodux.StoreProvider, {
+                                                store = self._clientStore
+                                            }, {
+                                                roact.createElement(require(script.BaseApp.Components.Button),{
+                                                    unmount = unmount;
+                                                    update = self._update;
+                                                })
+                                            }), game.Players.LocalPlayer.PlayerGui)
+                                        end
                                         self._songElapsed = tick()
                                     end
                                     
@@ -239,12 +261,33 @@ function ChartService.__initSingleton(prototype) -- class initilaization
                         end)()
                     end
                 end
-            else
-                self._stepNote = true
-                self._songTick = nil
+            end
+            if game.Players.LocalPlayer.Character then
+                local distance = (workspace.Functional.Dance.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+                if distance > 29 then
+                    if self._activate == true then
+                        self._activate = false
+                
+                        self._clientStore:dispatch({
+                            type = "Toggle";
+                            value = self._activate
+                        })
+                    end
+                elseif distance < 29 then
+                    if self._activate == false then
+                        self._activate = true
+                  
+                        self._clientStore:dispatch({
+                            type = "Toggle";
+                            value = self._activate
+                        })
+                    end
+                end
             end
         
+        
         end)
+
 
 
         self._initialized = true

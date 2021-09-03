@@ -5,5 +5,5 @@ local util = ReplicatedStorage.Vendor
 local rodux = require(util:WaitForChild("Rodux"))
 
 return rodux.combineReducers({
-    playerHandler = require(script.Reducers.PlayerCore)
+    Server = require(script.Reducers.PlayerCore)
 })
