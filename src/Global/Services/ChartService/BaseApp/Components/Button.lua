@@ -28,12 +28,20 @@ local function mapStateToProps(state)
 
         appTheme = state.playerHandler.Theme.Current; 
         visible = state.playerHandler.Active;
+        dancing = state.playerHandler.Dance;
     }
 end
 
 local function mapDispatchToProps(dispatch)
     return {
+        danceToggle = function(toggle)
+            dispatch({
+                type = "ToggleDance";
+                value = toggle;
+            })
 
+
+        end
     }
 end
 
@@ -173,49 +181,52 @@ function Button:didMount()
     self.input = UserInputService.InputBegan:Connect(function(input)
 
         if input.UserInputType == Enum.UserInputType.Keyboard then
-            if self.inputMap[input.KeyCode.Name] then
-                local humanoid = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-          
-                    
-                if self.props.visible then
-                    humanoid.WalkSpeed = 0
-                end
-
-                if self.inputMap[input.KeyCode.Name] == self.props.position then
-               
-                    local position = self.visualizer:getValue().Position.Y.Scale
-                    if  not(position > 0.530) and not(position < 0.4) then
-                        if self.scorable == true then
-                            self.props.update:FireServer({
-                                points = 1
-                            })
-                
-                    
-
-                            if humanoid then
-                                -- need to use animation object for server access
-                                local animator = humanoid:FindFirstChildOfClass("Animator")
-                                local animation = Instance.new("Animation");
-                                animation.AnimationId = self.danceMap[self.props.position]
-                                if animator then
-                                    local animationTrack = animator:LoadAnimation(animation)
-                                    animationTrack:Play()
-                            
-                                    self._animationTrack = animationTrack
-                                end
-                            end
-
-                    
-                            self.visualizer:getValue().Visible = false
-                            self.scorable = false
-                            spawn(function()
-                                wait(0.1)
-                                self.props.unmount()
-                            
-                            end)
-                        end
+            if self.props.dancing then
+                if self.inputMap[input.KeyCode.Name] then
+                    local humanoid = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            
+                        
+                    if self.props.visible then
+                        humanoid.WalkSpeed = 0
                     end
-          
+
+                    if self.inputMap[input.KeyCode.Name] == self.props.position then
+                
+                        local position = self.visualizer:getValue().Position.Y.Scale
+                      
+                        if  not(position > 0.530) and not(position < 0.46) then
+                            if self.scorable == true then
+                                self.props.update:FireServer({
+                                    points = 1
+                                })
+                    
+                        
+
+                                if humanoid then
+                                    -- need to use animation object for server access
+                                    local animator = humanoid:FindFirstChildOfClass("Animator")
+                                    local animation = Instance.new("Animation");
+                                    animation.AnimationId = self.danceMap[self.props.position]
+                                    if animator then
+                                        local animationTrack = animator:LoadAnimation(animation)
+                                        animationTrack:Play()
+                                
+                                        self._animationTrack = animationTrack
+                                    end
+                                end
+
+                        
+                                self.visualizer:getValue().Visible = false
+                                self.scorable = false
+                                spawn(function()
+                                    wait(0.1)
+                                    self.props.unmount()
+                                
+                                end)
+                            end
+                        end
+            
+                    end
                 end
             end
 
@@ -223,8 +234,9 @@ function Button:didMount()
  
                 local humanoid = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
           
-                    
-        
+                self.props.danceToggle(not(self.props.dancing))
+
+                
                 humanoid.WalkSpeed = 16
              
             end

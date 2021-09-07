@@ -26,13 +26,21 @@ local TWEEN_IN_SPRING = {
 local function mapStateToProps(state)
     return {
         appTheme = state.playerHandler.Theme.Current; 
-        visible = state.playerHandler.Active
+        visible = state.playerHandler.Active;
+        dancing = state.playerHandler.Dance;
     }
 end
 
 local function mapDispatchToProps(dispatch)
     return {
+        danceToggle = function(toggle)
+            dispatch({
+                type = "ToggleDance";
+                value = toggle;
+            })
 
+
+        end
     }
 end
 
@@ -116,6 +124,26 @@ function Hud:render()
             BackgroundTransparency = 1;
             Text = "Use WASD to Dance or Press on the Arrows!";
         });
+        breakButton = roact.createElement("TextButton", {
+            Size = UDim2.fromScale(0.1,0.1);
+            Position = UDim2.fromScale(0.7,0.2);
+            BackgroundColor3 = theme.background;
+            Text = self.props.dancing and "Dancing: Enabled" or "Dancing: Disabled";
+            Visible = self.props.visible;
+            TextSize = 16;
+            TextColor3 = theme.text;
+            Font = theme.font;
+            ZIndex = 2;
+            [roact.Event.Activated] = function(obj)
+                self.props.danceToggle(not(self.props.dancing))
+
+
+            end
+        },{
+            corner = roact.createElement("UICorner",{
+                CornerRadius = UDim.new(1,0);
+            });
+        });
         help2 = roact.createElement("TextLabel",{
             Font = theme.font;
            -- TextColor3 = theme.text;
@@ -124,7 +152,7 @@ function Hud:render()
             Position = UDim2.fromScale(0.7,0.5);
             Size = UDim2.fromScale(0.2,0.1);
             BackgroundTransparency = 1;
-            Text = "Jump and move at the same time to get off the dance floor!";
+            Text = "Jump to start or stop dancing!!";
         });
         a = roact.createElement("ImageLabel",{
             Size = UDim2.fromScale(0.05,0.05);
@@ -203,45 +231,44 @@ function Hud:didMount()
     end)
 
     self.inputBegin = UserInputService.InputBegan:Connect(function(input)
-    
+
         if input.UserInputType == Enum.UserInputType.Keyboard then
 
-            if self.props.visible then
-                local gotNote = false
-                
+                    
+            if self.props.dancing then
+                if self.props.visible then
+                    local gotNote = false
+                    
 
-                for _, item in pairs(game.Players.LocalPlayer.PlayerGui:GetChildren()) do
-                    if item.name == "button" then
-                        local position = item.container.button.Position.Y.Scale
-                        if  not(position > 0.530) and not(position < 0.4) then
-                       
-                            gotNote = true
+                    for _, item in pairs(game.Players.LocalPlayer.PlayerGui:GetChildren()) do
+                        if item.name == "button" then
+                            local position = item.container.button.Position.Y.Scale
+                            if  not(position > 0.530) and not(position < 0.46) then
+                        
+                                gotNote = true
+                            end
                         end
                     end
-                end
 
-                if gotNote then
-                    print("we got a valid note here")
-                else
-                    print("nothing here, queue a miss.")
-
+                    if gotNote == false then
+  
                     
-                    
-                    self.props.update:FireServer({
-                        points = -1
-                    })
-                    local humanoid = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-          
-                    if humanoid then
-                        -- need to use animation object for server access
-                        local animator = humanoid:FindFirstChildOfClass("Animator")
-                        local animation = Instance.new("Animation");
-                        animation.AnimationId = "rbxassetid://7428299815"
-                        if animator then
-                            local animationTrack = animator:LoadAnimation(animation)
-                            animationTrack:Play()
-                    
-                            self._animationTrack = animationTrack
+                        self.props.update:FireServer({
+                            points = -1
+                        })
+                        local humanoid = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            
+                        if humanoid then
+                            -- need to use animation object for server access
+                            local animator = humanoid:FindFirstChildOfClass("Animator")
+                            local animation = Instance.new("Animation");
+                            animation.AnimationId = "rbxassetid://7428299815"
+                            if animator then
+                                local animationTrack = animator:LoadAnimation(animation)
+                                animationTrack:Play()
+                        
+                                self._animationTrack = animationTrack
+                            end
                         end
                     end
                 end
@@ -262,7 +289,7 @@ function Hud:didMount()
     end)
 
     self.inputDisconnect = UserInputService.InputEnded:Connect(function(input)
-        --print(input)
+      
         if input.UserInputType == Enum.UserInputType.Keyboard then
             if self.deactivatedMap[input.KeyCode.Name] then
           

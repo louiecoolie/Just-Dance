@@ -17,6 +17,7 @@ return rodux.createReducer({
         Current = "darkTheme"
     };
     Active = false;
+    Dance = true;
 },{
     Toggle = function(state, action)
         local newState = copy(state)
@@ -25,6 +26,17 @@ return rodux.createReducer({
         newState.Active = action.value
         
         return newState
+    end,
+    ToggleDance = function(state, action)
+        local newState = copy(state)
+
+
+        newState.Dance = action.value
+
+        return newState
+
+
+
     end,
 
     
