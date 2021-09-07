@@ -98,7 +98,7 @@ function ChartService.__initSingleton(prototype) -- class initilaization
                     self._startClient:FireAllClients(true, self._currentIndex)
                    
                     self._currentSound.Ended:Connect(function()
-                        print('end')
+                  
                         ReplicatedStorage.Events.Binding:Fire("reset")
                         self._startClient:FireAllClients(false)
                     end)
@@ -142,22 +142,26 @@ function ChartService.__initSingleton(prototype) -- class initilaization
         
         end)
 
+        
  
     else -- start defining client side of class
         self._initialized = false
         self._uiHandle = ""; -- set it to an empty string for now
+
+        --obtaining remotes
+        self._syncClient = script.syncClient
+        self._startClient = script.startClient
+        self._update = ReplicatedStorage.Services.UIService.updateServer 
 
         self._clientStore = rodux.Store.new(client, {}, {rodux.thunkMiddleware})
         self._clientApp = roact.createElement(roactRodux.StoreProvider, {
             store = self._clientStore
         }, {
             App = roact.createElement(require(script.BaseApp),{
+                update = self._update;
             })
         })
-        --obtaining remotes
-        self._syncClient = script.syncClient
-        self._startClient = script.startClient
-        self._update = ReplicatedStorage.Services.UIService.updateServer -- get the remote from uiservice so we can update the uiservice store
+-- get the remote from uiservice so we can update the uiservice store
         -- chart container
         self._charts = {} -- define an empty table for charts 
         for _, chartData in pairs(script.Charts:GetChildren()) do -- get the charts
@@ -180,6 +184,7 @@ function ChartService.__initSingleton(prototype) -- class initilaization
         self._songTick = nil;
         self._songElapsed = 0;
         self._chartTick = 0;
+        self._previousChartTick = 0;
         self._songPlaying = false;
 
         self._syncClient.OnClientEvent:Connect(function(songTick, chartTick)
@@ -209,6 +214,8 @@ function ChartService.__initSingleton(prototype) -- class initilaization
             end
         
         end)
+
+    
         
         self._coreLoop = RunService.RenderStepped:Connect(function(dt) -- core logic loop for the chart service initialized here for client
 
@@ -230,8 +237,9 @@ function ChartService.__initSingleton(prototype) -- class initilaization
                                 if (tick()-self._songElapsed) >= self._songTick then
                     
                                     self._chartTick += 1;
-                                    if self._currentIndex.chart[tostring(self._chartTick)] then
-                              
+                                    if self._currentIndex.chart[tostring(self._chartTick)] and not(self._previousChartTick == self._chartTick) then
+                                        self._previousChartTick = self._chartTick;
+
                                         local handle
 
                                         local function unmount()
@@ -239,12 +247,14 @@ function ChartService.__initSingleton(prototype) -- class initilaization
                                         end
                                         
                                         if self._activate then
+                                            
                                             handle = roact.mount(roact.createElement(roactRodux.StoreProvider, {
                                                 store = self._clientStore
                                             }, {
-                                                roact.createElement(require(script.BaseApp.Components.Button),{
+                                                button = roact.createElement(require(script.BaseApp.Components.Button),{
                                                     unmount = unmount;
                                                     update = self._update;
+                                                    position = self._currentIndex.chart[tostring(self._chartTick)];
                                                 })
                                             }), game.Players.LocalPlayer.PlayerGui)
                                         end
@@ -268,15 +278,42 @@ function ChartService.__initSingleton(prototype) -- class initilaization
                     if self._activate == true then
                         self._activate = false
                 
+                            
+                        if self._animationTrack then
+                            self._animationTrack:Stop()
+                        end
+
                         self._clientStore:dispatch({
                             type = "Toggle";
                             value = self._activate
                         })
+              
+                    
+                        
                     end
                 elseif distance < 29 then
                     if self._activate == false then
                         self._activate = true
+                        
+
+                        if self._animationTrack then
+                            self._animationTrack:Stop()
+                        end
+
+                        local humanoid = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                        if humanoid then
+                            -- need to use animation object for server access
+                            local animator = humanoid:FindFirstChildOfClass("Animator")
+                            local animation = Instance.new("Animation");
+                            animation.AnimationId = "rbxassetid://7427449221"
+                            if animator then
+                                local animationTrack = animator:LoadAnimation(animation)
+                                animationTrack:Play()
                   
+                                self._animationTrack = animationTrack
+                            end
+                        end
+
                         self._clientStore:dispatch({
                             type = "Toggle";
                             value = self._activate
@@ -284,6 +321,8 @@ function ChartService.__initSingleton(prototype) -- class initilaization
                     end
                 end
             end
+
+           
         
         
         end)

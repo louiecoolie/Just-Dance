@@ -11,5 +11,6 @@ Binding.Name = "Binding"
 local UIService = require(ReplicatedStorage.Services.UIService)()
 local ChartService = require(ReplicatedStorage.Services.ChartService)()
 local MarketService = require(ServerStorage.Services.MarketService)()
+local PadService = require(ReplicatedStorage.Services.PadService)()
 
 

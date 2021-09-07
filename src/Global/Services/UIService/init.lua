@@ -77,9 +77,9 @@ function UIService.__initSingleton(prototype) -- class initilaization
 
         game.Players.PlayerAdded:Connect(function(player)
             local success, store = pcall(function()
-                return  self._datastore:GetAsync(player.Name)
+                return  self._datastore:GetAsync(player.UserId)
             end)
-           -- print(store)
+
             if success and store then
 
                 self._serverStore:dispatch({
@@ -93,7 +93,7 @@ function UIService.__initSingleton(prototype) -- class initilaization
                     data = store;
                 })
             else
-                print("no datastore")
+           
                 self._serverStore:dispatch({
                     type = "Profile";
                     key = player.Name;
@@ -117,13 +117,13 @@ function UIService.__initSingleton(prototype) -- class initilaization
         game.Players.PlayerRemoving:Connect(function(player)
             local state = self._serverStore:getState() 
             local success, errorMessage = pcall(function()
-                self._datastore:SetAsync(player.Name, state.Server.Profiles[player.Name])
+                self._datastore:SetAsync(player.UserId, state.Server.Profiles[player.Name])
             end)
         
         end)
 
         ReplicatedStorage.Events:WaitForChild("Binding").Event:Connect(function(type)
-            print("got end")
+
             if type == "reset" then
                 
                 local state = self._serverStore:getState() 
@@ -171,7 +171,7 @@ function UIService.__initSingleton(prototype) -- class initilaization
                 if distance > 29 then
                     if self._activate == true then
                         self._activate = false
-                        print("set false")
+                
                         self._clientStore:dispatch({
                             type = "Toggle";
                             value = self._activate
@@ -180,7 +180,7 @@ function UIService.__initSingleton(prototype) -- class initilaization
                 elseif distance < 29 then
                     if self._activate == false then
                         self._activate = true
-                        print("lets dance")
+                        
                         self._clientStore:dispatch({
                             type = "Toggle";
                             value = self._activate

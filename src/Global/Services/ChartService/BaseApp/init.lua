@@ -51,6 +51,7 @@ function BaseApp:render()
     local gameHud = context.with(function(theme)
         return roact.createElement(hud, {
             theme = theme;
+            update = self.props.update;
         })
     
     end)
