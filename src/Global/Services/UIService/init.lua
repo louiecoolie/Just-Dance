@@ -119,6 +119,10 @@ function UIService.__initSingleton(prototype) -- class initilaization
             local success, errorMessage = pcall(function()
                 self._datastore:SetAsync(player.UserId, state.Server.Profiles[player.Name])
             end)
+
+            if not success then --retry to save the players data, could be improved to include more retries.
+                self._datastore:SetAsync(player.UserId, state.Server.Profiles[player.Name])
+            end
         
         end)
 
@@ -145,6 +149,7 @@ function UIService.__initSingleton(prototype) -- class initilaization
         
         end)
     else -- start defining client side of class
+        -- the client will be creating its ui app here and inializating a thread to check for activation conditions.
         self._initialized = false
         self._uiHandle = ""; -- set it to an empty string for now
         self._dispatchClient = script:WaitForChild("dispatchClient")

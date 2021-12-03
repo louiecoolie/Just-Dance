@@ -194,7 +194,7 @@ function ChartService.__initSingleton(prototype) -- class initilaization
             self._chartTick = chartTick
 
         end)
-
+        -- this is received from server to start the dance game for the client.
         self._startClient.OnClientEvent:Connect(function(condition, index)
 
             self._songPlaying = condition
@@ -216,11 +216,11 @@ function ChartService.__initSingleton(prototype) -- class initilaization
         end)
 
     
-        
+        --this handles the input from the client which in turn tries to maintain note order from updates by the server
         self._coreLoop = RunService.RenderStepped:Connect(function(dt) -- core logic loop for the chart service initialized here for client
 
             if self._currentSound then
-                if self._currentSound.isLoaded then -- make sure the audio is loaded to get pretty TimeLength
+                if self._currentSound.isLoaded then -- make sure the audio is loaded to get TimeLength
             
                     if self._stepNote then
                         
